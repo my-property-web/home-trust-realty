@@ -1,22 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Real Estate Service API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: properties
+    description: Property listings
+  - name: inquiries
+    description: Viewing bookings and valuations
+  - name: agents
+    description: Real estate agents/consultants
+  - name: testimonials
+    description: Client testimonials
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +31,143 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List all properties
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [buy, rent, all]
+          required: false
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+          required: false
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+          required: false
+        - name: bedrooms
+          in: query
+          schema:
+            type: integer
+          required: false
+        - name: location
+          in: query
+          schema:
+            type: string
+          required: false
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+          required: false
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get property by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+
+  /inquiries/viewing:
+    post:
+      operationId: bookViewing
+      tags: [inquiries]
+      summary: Book a property viewing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ViewingRequest"
+      responses:
+        "201":
+          description: Viewing booked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+
+  /inquiries/valuation:
+    post:
+      operationId: requestValuation
+      tags: [inquiries]
+      summary: Request a free property valuation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValuationRequest"
+      responses:
+        "201":
+          description: Valuation request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InquiryResponse"
+
+  /agents:
+    get:
+      operationId: listAgents
+      tags: [agents]
+      summary: List all agents/consultants
+      responses:
+        "200":
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+
+  /testimonials:
+    get:
+      operationId: listTestimonials
+      tags: [testimonials]
+      summary: List client testimonials
+      responses:
+        "200":
+          description: List of testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +175,173 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        priceLabel:
+          type: string
+        listingType:
+          type: string
+          enum: [buy, rent]
+        propertyType:
+          type: string
+          enum: [apartment, house, villa, townhouse, studio, penthouse]
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        area:
+          type: number
+        areaUnit:
+          type: string
+        location:
+          type: string
+        address:
+          type: string
+        imageUrl:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        features:
+          type: array
+          items:
+            type: string
+        isVerified:
+          type: boolean
+        isFeatured:
+          type: boolean
+        yearBuilt:
+          type: integer
+        parking:
+          type: boolean
+        agentId:
+          type: integer
+      required:
+        - id
+        - title
+        - price
+        - priceLabel
+        - listingType
+        - propertyType
+        - bedrooms
+        - bathrooms
+        - area
+        - areaUnit
+        - location
+        - imageUrl
+        - isVerified
+        - isFeatured
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+        photoUrl:
+          type: string
+        experience:
+          type: integer
+        dealsCount:
+          type: integer
+        rating:
+          type: number
+        specializations:
+          type: array
+          items:
+            type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+        email:
+          type: string
+      required: [id, name, title, experience, dealsCount, rating, specializations]
+
+    Testimonial:
+      type: object
+      properties:
+        id:
+          type: integer
+        clientName:
+          type: string
+        clientPhotoUrl:
+          type: string
+        rating:
+          type: integer
+        comment:
+          type: string
+        transactionType:
+          type: string
+          enum: [bought, sold, rented]
+        propertyType:
+          type: string
+        date:
+          type: string
+      required: [id, clientName, rating, comment, transactionType, date]
+
+    ViewingRequest:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        preferredDate:
+          type: string
+        preferredTime:
+          type: string
+        message:
+          type: string
+      required: [propertyId, name, email, phone, preferredDate]
+
+    ValuationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        propertyType:
+          type: string
+        bedrooms:
+          type: integer
+        message:
+          type: string
+      required: [name, email, phone, address, propertyType]
+
+    InquiryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        message:
+          type: string
+        referenceNumber:
+          type: string
+      required: [id, status, message, referenceNumber]
