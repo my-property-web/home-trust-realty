@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useLocation, useSearch } from "wouter"
-import { Filter, SlidersHorizontal, Loader2 } from "lucide-react"
+import { Filter, SlidersHorizontal, Loader2, Search } from "lucide-react"
 import { Layout } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { PropertyCard } from "@/components/property-card"
